@@ -8,7 +8,9 @@
         <p><input type="password" id="senha" v-model="senha"/></p>
         <p v-if="senha?.length < 5">Senha muito curta!</p>
         <p v-else>Senha ok!</p>
+        <p v-if="erro">{{ erro }}</p>
         <button @click="incluir">Incluir</button>
+        <button @click="atualizar">Atualizar</button>
 
         <table>
             <thead>
@@ -28,9 +30,12 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
+import axios from 'axios';
+import { onMounted } from 'vue';
 
 const nome = ref<string>('teste');
 const senha = ref<string>('');
+const erro = ref<string>('')
 
 interface usuario {
     id?: number
@@ -43,7 +48,29 @@ const usuarios = ref<usuario[]>([
     { nome: 'teste2', senha:'123' }
 ]);
 
-function incluir() {
-    usuarios.value.push({ nome: nome.value, senha: senha.value })
+async function incluir() {
+    try {
+        await axios.post('https://humble-parakeet-wpxqqw47px4cv674-8080.app.github.dev/usuario', 
+            { nome: nome.value, senha: senha.value }
+        )
+       atualizar() 
+    } catch (e) {
+        erro.value = (e as Error).message
+    }
 };
+
+async function atualizar() {
+    try {
+
+        usuarios.value = (await axios.get('https://humble-parakeet-wpxqqw47px4cv674-8080.app.github.dev/usuario')).data
+    }
+    catch(e) {
+        erro.value = (e as Error).message;
+    }
+
+}
+
+onMounted(() => {
+    atualizar()
+})
 </script>
